@@ -16,11 +16,23 @@ screen.fill((0,0,0))
 
 game_over = False
 
+x, y = (0, 0)
+
 while not game_over: 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_over = True
-    screen.blit(player, (screen.get_width() / 2 - spriteWidth / 2,
-                           screen.get_height() / 2 - spriteHeight / 2))
+    pressed = pygame.key.get_pressed()
+    if pressed[K_UP]:
+        y -= 1
+    if pressed[K_DOWN]:
+        y += 1
+    if pressed[K_LEFT]:
+        x -= 1
+    if pressed[K_RIGHT]:
+        x += 1
+    '''screen.blit(player, (screen.get_width() / 2 - spriteWidth / 2,
+                           screen.get_height() / 2 - spriteHeight / 2))'''
+    screen.blit(player, (x, y))    
     pygame.display.update()
 pygame.quit()
