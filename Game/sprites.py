@@ -23,13 +23,13 @@ while not game_over:
         if event.type == pygame.QUIT:
             game_over = True
     pressed = pygame.key.get_pressed()
-    if pressed[K_UP]:
+    if pressed[K_UP]: # type: ignore
         y -= 1
-    if pressed[K_DOWN]:
+    if pressed[K_DOWN]: # type: ignore
         y += 1
-    if pressed[K_LEFT]:
+    if pressed[K_LEFT]: # type: ignore
         x -= 1
-    if pressed[K_RIGHT]:
+    if pressed[K_RIGHT]: # type: ignore
         x += 1
     '''screen.blit(player, (screen.get_width() / 2 - spriteWidth / 2,
                            screen.get_height() / 2 - spriteHeight / 2))'''
