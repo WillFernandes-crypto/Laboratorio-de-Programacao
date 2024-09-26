@@ -11,13 +11,45 @@ screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE
 # Define o título da janela
 pygame.display.set_caption('The Emptiness Machine')
 
+# Define cores
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
 # Carregar o background
 scenery = pygame.image.load(r'Game/img/scenery.png').convert_alpha()
+
+# Carregar a fonte
+font = pygame.font.Font(None, 50)
 
 def draw_bg():
     # Redimensiona o fundo para o tamanho da tela atual
     scaled_scenery = pygame.transform.scale(scenery, (screen.get_width(), screen.get_height()))
     screen.blit(scaled_scenery, (0, 0))
+
+def draw_text(text, font, color, x, y):
+    img = font.render(text, True, color)
+    screen.blit(img, (x, y))
+
+def main_menu():
+    menu_running = True
+    while menu_running:
+        screen.fill(BLACK)
+        draw_text('THE EMPTINESS MACHINE', font, WHITE, screen_width // 2 - 200, screen_height // 2 - 100)
+        draw_text('Press [ENTER] to Start', font, WHITE, screen_width // 2 - 150, screen_height // 2)
+        draw_text('Press [ESC] to Quit', font, WHITE, screen_width // 2 - 130, screen_height // 2 + 100)
+        
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:  # Tecla Enter
+                    menu_running = False  # Sai do menu e inicia o jogo
+                if event.key == pygame.K_ESCAPE:  # Tecla Esc
+                    pygame.quit()
+                    sys.exit()  # Fecha o jogo
 
 class Character:
     def __init__(self, x, y, name, max_hp, mana, potions):
@@ -61,51 +93,56 @@ class Character:
     def draw(self):
         screen.blit(self.image, self.rect)
 
-player = Character(200, 260, 'Player', 30, 10, 3)
-buggy = Character(550, 270, 'Buggy', 10, 0, 0)
+# Função para rodar o jogo principal
+def game():
+    player = Character(200, 260, 'Player', 30, 10, 3)
+    buggy = Character(550, 270, 'Buggy', 10, 0, 0)
 
-mob_list = [buggy]
+    mob_list = [buggy]
+    clock = pygame.time.Clock()
 
-clock = pygame.time.Clock()
+    game_over = False
+    ground_level = screen_height - 50  # Define o nível do solo
 
-game_over = False
-ground_level = screen_height - 50  # Define o nível do solo
+    # Loop principal do jogo
+    while not game_over:
+        dt = clock.tick(100)
 
-# Loop principal do jogo
-while not game_over:
-    dt = clock.tick(100)
+        # Desenha o background
+        draw_bg()
 
-    # Desenha o background
-    draw_bg()
+        # Checa as teclas pressionadas
+        keys = pygame.key.get_pressed()
+        move_left = keys[pygame.K_a]  # Tecla 'A'
+        move_right = keys[pygame.K_d]  # Tecla 'D'
+        
+        if keys[pygame.K_w]:  # Tecla 'W'
+            player.jump_action()
 
-    # Checa as teclas pressionadas
-    keys = pygame.key.get_pressed()
-    move_left = keys[pygame.K_a]  # Tecla 'A'
-    move_right = keys[pygame.K_d]  # Tecla 'D'
-    
-    if keys[pygame.K_w]:  # Tecla 'W'
-        player.jump_action()
+        # Movimenta o player
+        player.move(move_left, move_right)
 
-    # Movimenta o player
-    player.move(move_left, move_right)
+        # Aplica gravidade ao player e desenha
+        player.apply_gravity(ground_level)
+        player.draw()
 
-    # Aplica gravidade ao player e desenha
-    player.apply_gravity(ground_level)
-    player.draw()
+        for mob in mob_list:
+            mob.apply_gravity(ground_level)
+            mob.draw()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_over = True
+            elif event.type == pygame.VIDEORESIZE:
+                # Atualiza a largura e altura da tela quando redimensionada
+                screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                ground_level = event.h - 50  # Atualiza o nível do solo com o redimensionamento da tela
 
-    for mob in mob_list:
-        mob.apply_gravity(ground_level)
-        mob.draw()
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game_over = True
-        elif event.type == pygame.VIDEORESIZE:
-            # Atualiza a largura e altura da tela quando redimensionada
-            screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-            ground_level = event.h - 50  # Atualiza o nível do solo com o redimensionamento da tela
+        # Atualiza a tela
+        pygame.display.update()
 
-    # Atualiza a tela
-    pygame.display.update()
+# Inicia o jogo com o menu principal
+main_menu()
+game()
 
 pygame.quit()
