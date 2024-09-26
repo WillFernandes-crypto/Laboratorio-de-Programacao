@@ -1,5 +1,7 @@
 import pygame
 import sys
+from character import Character
+from utils import load_background, draw_bg, draw_text  # Removido set_screen
 
 # Inicializa o Pygame
 pygame.init()
@@ -15,28 +17,19 @@ pygame.display.set_caption('The Emptiness Machine')
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-# Carregar o background
-scenery = pygame.image.load(r'Game/img/scenery.png').convert_alpha()
-
 # Carregar a fonte
 font = pygame.font.Font(None, 50)
 
-def draw_bg():
-    # Redimensiona o fundo para o tamanho da tela atual
-    scaled_scenery = pygame.transform.scale(scenery, (screen.get_width(), screen.get_height()))
-    screen.blit(scaled_scenery, (0, 0))
-
-def draw_text(text, font, color, x, y):
-    img = font.render(text, True, color)
-    screen.blit(img, (x, y))
+# Carregar o background
+scenery = load_background()
 
 def main_menu():
     menu_running = True
     while menu_running:
         screen.fill(BLACK)
-        draw_text('THE EMPTINESS MACHINE', font, WHITE, screen_width // 2 - 200, screen_height // 2 - 100)
-        draw_text('Press [ENTER] to Start', font, WHITE, screen_width // 2 - 150, screen_height // 2)
-        draw_text('Press [ESC] to Quit', font, WHITE, screen_width // 2 - 130, screen_height // 2 + 100)
+        draw_text('THE EMPTINESS MACHINE', font, WHITE, screen, screen_width // 2 - 200, screen_height // 2 - 100)
+        draw_text('Press [ENTER] to Start', font, WHITE, screen, screen_width // 2 - 150, screen_height // 2)
+        draw_text('Press [ESC] to Quit', font, WHITE, screen, screen_width // 2 - 130, screen_height // 2 + 100)
         
         pygame.display.update()
 
@@ -51,57 +44,13 @@ def main_menu():
                     pygame.quit()
                     sys.exit()  # Fecha o jogo
 
-class Character:
-    def __init__(self, x, y, name, max_hp, mana, potions):
-        self.name = name
-        self.max_hp = max_hp
-        self.hp = max_hp
-        self.mana = mana
-        self.potions = potions
-        self.alive = True
-        img_player = self.image = pygame.image.load(f'Game/img/{self.name}.png')
-        self.image = pygame.transform.scale(img_player, (100, 100))
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.vel_y = 0  # Velocidade vertical para gravidade
-        self.vel_x = 0  # Velocidade horizontal
-        self.jump = False  # Flag para verificar se o personagem está no ar
-
-    def apply_gravity(self, ground_level):
-        gravity = 0.5  # A força da gravidade
-        self.vel_y += gravity  # Aumenta a velocidade vertical com a gravidade
-        self.rect.y += self.vel_y  # Atualiza a posição do personagem no eixo Y
-        
-        # Verifica se o personagem atingiu o solo
-        if self.rect.bottom >= ground_level:
-            self.rect.bottom = ground_level  # Mantém o personagem no solo
-            self.vel_y = 0  # Reseta a velocidade vertical ao atingir o solo
-            self.jump = False  # Permite que o personagem pule novamente
-
-    def move(self, move_left, move_right):
-        move_speed = 5  # Velocidade de movimento
-        if move_left:
-            self.rect.x -= move_speed
-        if move_right:
-            self.rect.x += move_speed
-
-    def jump_action(self):
-        if not self.jump:  # Só permite pular se não estiver no ar
-            self.vel_y = -10  # Velocidade do pulo
-            self.jump = True
-
-    def draw(self):
-        screen.blit(self.image, self.rect)
-
-# Função para rodar o jogo principal
 def game():
+    global screen  # Declara screen como global
     player = Character(200, 260, 'Player', 30, 10, 3)
     buggy = Character(550, 270, 'Buggy', 10, 0, 0)
 
     mob_list = [buggy]
     clock = pygame.time.Clock()
-
-    game_over = False
     ground_level = screen_height - 50  # Define o nível do solo
 
     score = 0  # Inicializa a pontuação do jogador
@@ -117,11 +66,12 @@ def game():
                     score += 10  # Aumenta a pontuação ao derrotar um mob
 
     # Loop principal do jogo
+    game_over = False
     while not game_over:
         dt = clock.tick(100)
 
         # Desenha o background
-        draw_bg()
+        draw_bg(screen, scenery)  # Adicione a variável screen aqui
 
         # Checa as teclas pressionadas
         keys = pygame.key.get_pressed()
@@ -145,15 +95,15 @@ def game():
 
         # Aplica gravidade ao player e desenha
         player.apply_gravity(ground_level)
-        player.draw()
+        player.draw(screen)  # Passe a variável screen aqui
 
         # Desenha os mobs
         for mob in mob_list:
             mob.apply_gravity(ground_level)
-            mob.draw()
+            mob.draw(screen)  # Passe a variável screen aqui
 
         # Exibe a pontuação no canto superior direito
-        draw_text(f'Score: {score}', font, WHITE, screen_width - 200, 20)
+        draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)  # Passe a variável screen aqui
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
