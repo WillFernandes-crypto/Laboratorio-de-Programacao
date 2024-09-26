@@ -104,6 +104,18 @@ def game():
     game_over = False
     ground_level = screen_height - 50  # Define o nível do solo
 
+    score = 0  # Inicializa a pontuação do jogador
+
+    # Função para o ataque do jogador
+    def player_attack():
+        nonlocal score
+        for mob in mob_list:
+            if player.rect.colliderect(mob.rect):  # Se o jogador colidir com o mob
+                mob.hp -= 5  # Dano ao mob
+                if mob.hp <= 0:
+                    mob_list.remove(mob)  # Remove o mob quando ele é derrotado
+                    score += 10  # Aumenta a pontuação ao derrotar um mob
+
     # Loop principal do jogo
     while not game_over:
         dt = clock.tick(100)
@@ -119,6 +131,15 @@ def game():
         if keys[pygame.K_w]:  # Tecla 'W'
             player.jump_action()
 
+        # Verifica ataques (tecla J)
+        if keys[pygame.K_j]:
+            player_attack()
+
+        # Verifica cliques do mouse para ataque
+        mouse_buttons = pygame.mouse.get_pressed()
+        if mouse_buttons[0]:  # Botão esquerdo do mouse
+            player_attack()
+
         # Movimenta o player
         player.move(move_left, move_right)
 
@@ -126,9 +147,13 @@ def game():
         player.apply_gravity(ground_level)
         player.draw()
 
+        # Desenha os mobs
         for mob in mob_list:
             mob.apply_gravity(ground_level)
             mob.draw()
+
+        # Exibe a pontuação no canto superior direito
+        draw_text(f'Score: {score}', font, WHITE, screen_width - 200, 20)
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
