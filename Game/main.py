@@ -31,6 +31,32 @@ class Character:
         self.image = pygame.transform.scale(img_player, (100, 100))
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
+        self.vel_y = 0  # Velocidade vertical para gravidade
+        self.vel_x = 0  # Velocidade horizontal
+        self.jump = False  # Flag para verificar se o personagem está no ar
+
+    def apply_gravity(self, ground_level):
+        gravity = 0.5  # A força da gravidade
+        self.vel_y += gravity  # Aumenta a velocidade vertical com a gravidade
+        self.rect.y += self.vel_y  # Atualiza a posição do personagem no eixo Y
+        
+        # Verifica se o personagem atingiu o solo
+        if self.rect.bottom >= ground_level:
+            self.rect.bottom = ground_level  # Mantém o personagem no solo
+            self.vel_y = 0  # Reseta a velocidade vertical ao atingir o solo
+            self.jump = False  # Permite que o personagem pule novamente
+
+    def move(self, move_left, move_right):
+        move_speed = 5  # Velocidade de movimento
+        if move_left:
+            self.rect.x -= move_speed
+        if move_right:
+            self.rect.x += move_speed
+
+    def jump_action(self):
+        if not self.jump:  # Só permite pular se não estiver no ar
+            self.vel_y = -10  # Velocidade do pulo
+            self.jump = True
 
     def draw(self):
         screen.blit(self.image, self.rect)
@@ -38,13 +64,13 @@ class Character:
 player = Character(200, 260, 'Player', 30, 10, 3)
 buggy = Character(550, 270, 'Buggy', 10, 0, 0)
 
-mob_list = []
-mob_list.append(buggy)
-mob_list.append(buggy)
+mob_list = [buggy]
 
 clock = pygame.time.Clock()
 
 game_over = False
+ground_level = screen_height - 50  # Define o nível do solo
+
 # Loop principal do jogo
 while not game_over:
     dt = clock.tick(100)
@@ -52,10 +78,24 @@ while not game_over:
     # Desenha o background
     draw_bg()
 
-    # Desenha os personagens
+    # Checa as teclas pressionadas
+    keys = pygame.key.get_pressed()
+    move_left = keys[pygame.K_a]  # Tecla 'A'
+    move_right = keys[pygame.K_d]  # Tecla 'D'
+    
+    if keys[pygame.K_w]:  # Tecla 'W'
+        player.jump_action()
+
+    # Movimenta o player
+    player.move(move_left, move_right)
+
+    # Aplica gravidade ao player e desenha
+    player.apply_gravity(ground_level)
     player.draw()
-    for mobs in mob_list:
-        buggy.draw()
+
+    for mob in mob_list:
+        mob.apply_gravity(ground_level)
+        mob.draw()
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -63,6 +103,7 @@ while not game_over:
         elif event.type == pygame.VIDEORESIZE:
             # Atualiza a largura e altura da tela quando redimensionada
             screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+            ground_level = event.h - 50  # Atualiza o nível do solo com o redimensionamento da tela
 
     # Atualiza a tela
     pygame.display.update()
