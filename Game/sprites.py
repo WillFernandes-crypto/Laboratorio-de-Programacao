@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import * 
 
-pygame.init()
+'''pygame.init()
 
 screen = pygame.display.set_mode((800, 600), 0, 32)
 
@@ -54,5 +54,5 @@ while not game_over:
     screen.fill((0,0,0))
     screen.blit(player, (x, y))    
     pygame.display.update()
-    
-pygame.quit()
+
+pygame.quit()'''
