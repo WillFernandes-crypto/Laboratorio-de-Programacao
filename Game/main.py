@@ -46,13 +46,15 @@ def main_menu():
 
 def game():
     global screen  # Declara screen como global
-    player = Character(200, 260, 'Player', 30, 10, 3)
-    buggy = Character(550, 270, 'Buggy', 10, 0, 0)
+    clock = pygame.time.Clock()
+    
+    # Define o nível do solo antes de instanciar os personagens
+    ground_level = screen_height - 50  # Define o nível do solo
+    player = Character(200, ground_level - 100, 'Player', 30, 10, 3)  # Coloque o player no chão
+    buggy = Character(550, ground_level - 100, 'Buggy', 10, 0, 0)  # Coloque o buggy no chão
 
     mob_list = [buggy]
-    clock = pygame.time.Clock()
-    ground_level = screen_height - 50  # Define o nível do solo
-
+    
     score = 0  # Inicializa a pontuação do jogador
 
     # Função para o ataque do jogador
@@ -71,7 +73,7 @@ def game():
         dt = clock.tick(100)
 
         # Desenha o background
-        draw_bg(screen, scenery)  # Adicione a variável screen aqui
+        draw_bg(screen, scenery)
 
         # Checa as teclas pressionadas
         keys = pygame.key.get_pressed()
@@ -90,28 +92,38 @@ def game():
         if mouse_buttons[0]:  # Botão esquerdo do mouse
             player_attack()
 
+        player.update()
+
         # Movimenta o player
         player.move(move_left, move_right)
-
+        
         # Aplica gravidade ao player e desenha
         player.apply_gravity(ground_level)
-        player.draw(screen)  # Passe a variável screen aqui
+        player.draw(screen)
 
         # Desenha os mobs
         for mob in mob_list:
             mob.apply_gravity(ground_level)
-            mob.draw(screen)  # Passe a variável screen aqui
+            mob.update()
+            mob.draw(screen)
 
         # Exibe a pontuação no canto superior direito
-        draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)  # Passe a variável screen aqui
-        
+        draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
+
+        # Atualiza os limites do buggy
+        for mob in mob_list:
+            if mob.rect.x < 0:
+                mob.rect.x = 0
+            if mob.rect.x > screen_width - mob.rect.width:
+                mob.rect.x = screen_width - mob.rect.width
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
             elif event.type == pygame.VIDEORESIZE:
                 # Atualiza a largura e altura da tela quando redimensionada
                 screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                ground_level = event.h - 50  # Atualiza o nível do solo com o redimensionamento da tela
+                ground_level = event.h - 50  # Atualiza o nível do solo
 
         # Atualiza a tela
         pygame.display.update()
@@ -121,3 +133,4 @@ main_menu()
 game()
 
 pygame.quit()
+

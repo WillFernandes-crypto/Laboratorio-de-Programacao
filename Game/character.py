@@ -8,8 +8,17 @@ class Character:
         self.mana = mana
         self.potions = potions
         self.alive = True
-        img_player = self.image = pygame.image.load(f'Game/img/{self.name}.png')
-        self.image = pygame.transform.scale(img_player, (100, 100))
+        self.animation_list = []
+        self.frame_index = 0
+        self.update_time = pygame.time.get_ticks()
+        
+        # Carrega as imagens da animação
+        for i in range(9):
+            img = pygame.image.load(f'./img/{self.name}/walk/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
+            self.animation_list.append(img)
+        
+        self.image = self.animation_list[self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.vel_y = 0  # Velocidade vertical para gravidade
@@ -38,6 +47,20 @@ class Character:
         if not self.jump:  # Só permite pular se não estiver no ar
             self.vel_y = -10  # Velocidade do pulo
             self.jump = True
+    
+    def update(self):
+        animation_cooldown = 100
+        # Atualiza a imagem e lida com a animação
+        if pygame.time.get_ticks() - self.update_time > animation_cooldown:
+            self.update_time = pygame.time.get_ticks()
+            self.frame_index += 1
+            
+            # Reinicia o índice de animação ao final
+            if self.frame_index >= len(self.animation_list):
+                self.frame_index = 0
+                
+        # Atualiza a imagem atual
+        self.image = self.animation_list[self.frame_index]
 
-    def draw(self, screen):  # Modificado para aceitar 'screen' como argumento
+    def draw(self, screen):
         screen.blit(self.image, self.rect)  # Desenha a imagem na tela fornecida
