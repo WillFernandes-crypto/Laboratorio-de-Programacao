@@ -1,27 +1,19 @@
 # main.py
 import pygame
 import sys
-from character import Character, HealthBar  # Adiciona HealthBar
-from utils import load_background, draw_bg, draw_text, draw_panel, red, green
+from character import Character, HealthBar
+from utils import load_background, draw_bg, draw_text, red, green
 
-# Inicializa o Pygame
 pygame.init()
 
-# Define as dimensões da janela
 screen_width, screen_height = 800, 600
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
-
-# Define o título da janela
 pygame.display.set_caption('The Emptiness Machine')
 
-# Define cores
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-# Carregar a fonte após a inicialização do Pygame
 font = pygame.font.SysFont('Times New Roman', 26)
-
-# Carregar o background
 scenery = load_background()
 
 def main_menu():
@@ -39,48 +31,50 @@ def main_menu():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:  # Tecla Enter
-                    menu_running = False  # Sai do menu e inicia o jogo
-                if event.key == pygame.K_ESCAPE:  # Tecla Esc
+                if event.key == pygame.K_RETURN:
+                    menu_running = False
+                if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-                    sys.exit()  # Fecha o jogo
+                    sys.exit()
 
 def game():
-    global screen
+    global screen, screen_width, screen_height
     clock = pygame.time.Clock()
 
     ground_level = screen_height - 50
-    player = Character(200, ground_level, 'Player', 100, 10, 3)
-    buggy = Character(550, ground_level - 30, 'Buggy', 30, 10, 3)
+    player = Character(200, ground_level, 'Player', 100, 10, 3, 10)
+    buggy = Character(550, ground_level - 30, 'Buggy', 30, 3, 3, 0)
 
-    buggy_list = [buggy]
+    mob_list = [buggy]
 
-    # Barra de vida do player (vermelha) - Aumentada
     player_health_bar = HealthBar(10, 30, player.max_hp, red, bar_length=200)
-
     score = 0
 
     def player_attack():
         nonlocal score
-        for buggy in buggy_list:
-            if player.rect.colliderect(buggy.rect):
-                buggy.hp -= 5
-                if buggy.hp <= 0:
-                    buggy_list.remove(buggy)
+        for mob in mob_list:
+            if player.rect.colliderect(mob.rect):
+                mob.hp = max(mob.hp - player.damage, 0)  # Evitar HP abaixo de 0
+                if mob.hp == 0:
+                    mob_list.remove(mob)
                     score += 10
 
+    def check_game_over():
+        if player.hp <= 0:
+            player.die()
+
     game_over = False
+    mob_damage_timer = 0  # Controle de dano por segundo dos mobs
     while not game_over:
         dt = clock.tick(60)
+        mob_damage_timer += dt
 
-        # Desenha o background
         draw_bg(screen, scenery)
 
-        # Checa as teclas pressionadas
         keys = pygame.key.get_pressed()
         move_left = keys[pygame.K_a]
         move_right = keys[pygame.K_d]
-        
+
         if keys[pygame.K_w]:
             player.jump_action()
 
@@ -96,37 +90,37 @@ def game():
         player.apply_gravity(ground_level)
         player.draw(screen)
 
-        # Atualiza o HP do player para testar
-        #player.hp = 90
-
-        # Desenha o texto e a barra de vida do player
         draw_text(f'{player.name} HP: {player.hp}', font, red, screen, 10, 5)
         player_health_bar.draw(screen, player.hp)
 
-        # Desenha os buggys e suas barras de vida
-        for buggy in buggy_list:
-            buggy.apply_gravity(ground_level)
-            buggy.update()
-            buggy.draw(screen)
+        for mob in mob_list:
+            mob.apply_gravity(ground_level)
+            mob.update()
+            mob.draw(screen)
 
-            # Barra de vida do buggy menor
-            buggy_health_bar = HealthBar(buggy.rect.centerx - 25, buggy.rect.top - 15, buggy.max_hp, green, bar_length=50)
-            buggy_health_bar.draw(screen, buggy.hp)
+            mob_health_bar = HealthBar(mob.rect.centerx - 25, mob.rect.top - 15, mob.max_hp, green, bar_length=50)
+            mob_health_bar.draw(screen, mob.hp)
 
-        # Exibe a pontuação
+            # Controla o tempo para o mob causar dano
+            if mob.name == 'Buggy' and player.rect.colliderect(mob.rect) and mob_damage_timer >= 2000:  # 2 segundos
+                player.hp = max(player.hp - 1, 0)  # Evitar HP abaixo de 0
+                mob_damage_timer = 0  # Reseta o timer de dano
+
         draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
+
+        check_game_over()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
             elif event.type == pygame.VIDEORESIZE:
-                screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                ground_level = event.h - 50
+                screen_width, screen_height = event.w, event.h
+                screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+                ground_level = screen_height - 50
 
         pygame.display.update()
 
-# Inicia o jogo com o menu principal
 main_menu()
 game()
-
 pygame.quit()
+
