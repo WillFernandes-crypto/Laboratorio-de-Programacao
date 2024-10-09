@@ -123,4 +123,3 @@ def game():
 main_menu()
 game()
 pygame.quit()
-
