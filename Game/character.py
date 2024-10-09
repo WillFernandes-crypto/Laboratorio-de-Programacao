@@ -39,6 +39,9 @@ class Character:
             temp_list.append(img)
         self.animation_list.append(temp_list)
 
+        self.facing_left = False  # Direção inicial do personagem
+        self.damage_interval = 2000  # Intervalo de 2 segundos para causar dano
+        self.damage_value = 10 if name == 'Buggy' else damage  # Dano inicial para o buggy é 10
         self.image = self.animation_list[self.action][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -46,8 +49,13 @@ class Character:
         self.vel_x = 0
         self.jump = False
 
+        # Criar hitbox menor e centralizada
         if self.name == 'Buggy':
-            self.vel_y = 0
+            self.hitbox = pygame.Rect(self.rect.centerx - 8, self.rect.centery - 35, 20, 40)  # Hitbox do buggy
+        elif self.name == 'Player':
+            self.hitbox = pygame.Rect(self.rect.centerx - 45, self.rect.centery - 105, 30, 80)  # Hitbox do buggy
+        else:
+            self.hitbox = self.rect  # Outros personagens usam a hitbox normal
 
     def apply_gravity(self, ground_level):
         gravity = 0.5
@@ -69,8 +77,11 @@ class Character:
     def move(self, move_left, move_right):
         if move_left and self.rect.x > 0:
             self.rect.x -= 5
+            self.facing_left = True  # Se mover para a esquerda, virado para a esquerda
         if move_right and self.rect.x < 800 - self.rect.width:
             self.rect.x += 5
+            self.facing_left = False  # Se mover para a direita, virado para a direita
+
 
     def jump_action(self):
         if not self.jump:
@@ -87,6 +98,14 @@ class Character:
             self.animation_list[3].append(img)
 
     def update(self):
+        # Atualiza a posição da hitbox para seguir o personagem
+        if self.name == 'Player':
+            self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2) - 25  # Desloca 10 pixels para a esquerda
+            self.hitbox.y = self.rect.centery - (self.hitbox.height // 2)
+        else:
+            self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2)
+            self.hitbox.y = self.rect.centery - (self.hitbox.height // 2)
+        
         self.image = self.animation_list[self.action][self.frame_index]
         if pygame.time.get_ticks() - self.update_time > 100:
             self.frame_index += 1
@@ -97,8 +116,12 @@ class Character:
             else:
                 self.idle()
 
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
+        surface.blit(self.image, self.rect)
+        # Desenho opcional para depuração:
+        pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 2)  # Desenhar a hitbox para visualização
 
 class HealthBar:
     def __init__(self, x, y, max_hp, color, bar_length=50):

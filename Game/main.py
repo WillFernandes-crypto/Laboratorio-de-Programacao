@@ -52,12 +52,15 @@ def game():
 
     def player_attack():
         nonlocal score
+        attack_range = pygame.Rect(player.hitbox.left - 50 if player.facing_left else player.hitbox.right, 
+                                player.hitbox.top, 100, player.hitbox.height)
         for mob in mob_list:
-            if player.rect.colliderect(mob.rect):
+            if attack_range.colliderect(mob.hitbox):
                 mob.hp = max(mob.hp - player.damage, 0)  # Evitar HP abaixo de 0
                 if mob.hp == 0:
                     mob_list.remove(mob)
                     score += 10
+
 
     def check_game_over():
         if player.hp <= 0:
@@ -101,10 +104,11 @@ def game():
             mob_health_bar = HealthBar(mob.rect.centerx - 25, mob.rect.top - 15, mob.max_hp, green, bar_length=50)
             mob_health_bar.draw(screen, mob.hp)
 
-            # Controla o tempo para o mob causar dano
-            if mob.name == 'Buggy' and player.rect.colliderect(mob.rect) and mob_damage_timer >= 2000:  # 2 segundos
-                player.hp = max(player.hp - 1, 0)  # Evitar HP abaixo de 0
+            # Controla o tempo para o mob causar dano ao player
+            if mob.name == 'Buggy' and player.hitbox.colliderect(mob.hitbox) and mob_damage_timer >= mob.damage_interval:
+                player.hp = max(player.hp - mob.damage_value, 0)  # Dano de 10
                 mob_damage_timer = 0  # Reseta o timer de dano
+
 
         draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
 
