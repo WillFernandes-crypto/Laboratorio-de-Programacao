@@ -1,3 +1,5 @@
+#main.py
+
 import pygame
 import sys
 from character import Character
@@ -50,8 +52,8 @@ def game():
     
     # Define o nível do solo antes de instanciar os personagens
     ground_level = screen_height - 50  # Define o nível do solo
-    player = Character(200, ground_level - 100, 'Player', 30, 10, 3)  # Coloque o player no chão
-    buggy = Character(550, ground_level - 100, 'Buggy', 10, 0, 0)  # Coloque o buggy no chão
+    player = Character(200, ground_level, 'Player', 30, 10, 3)  # Coloque o player no chão
+    buggy = Character(550, ground_level - 30, 'Buggy', 30, 10, 3)  # Ajusta para que o buggy fique um pouco acima do solo
 
     mob_list = [buggy]
     
@@ -96,26 +98,19 @@ def game():
 
         # Movimenta o player
         player.move(move_left, move_right)
-        
+
         # Aplica gravidade ao player e desenha
         player.apply_gravity(ground_level)
         player.draw(screen)
 
         # Desenha os mobs
         for mob in mob_list:
-            mob.apply_gravity(ground_level)
+            mob.apply_gravity(ground_level)  # Aplica gravidade apenas nos mobs normais
             mob.update()
             mob.draw(screen)
 
         # Exibe a pontuação no canto superior direito
         draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
-
-        # Atualiza os limites do buggy
-        for mob in mob_list:
-            if mob.rect.x < 0:
-                mob.rect.x = 0
-            if mob.rect.x > screen_width - mob.rect.width:
-                mob.rect.x = screen_width - mob.rect.width
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

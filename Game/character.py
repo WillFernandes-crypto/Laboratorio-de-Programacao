@@ -1,3 +1,5 @@
+# character.py
+
 import pygame
 
 class Character:
@@ -13,28 +15,40 @@ class Character:
         self.update_time = pygame.time.get_ticks()
         
         # Carrega as imagens da animação
-        for i in range(9):
-            img = pygame.image.load(f'./img/{self.name}/walk/{i}.png')
-            img = pygame.transform.scale(img, (img.get_width() * 3, img.get_height() * 3))
+        for i in range(6):
+            img = pygame.image.load(f'./img/{self.name}/idle/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
             self.animation_list.append(img)
         
         self.image = self.animation_list[self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.vel_y = 0  # Velocidade vertical para gravidade
+        # Velocidade vertical inicial
+        self.vel_y = 0  # Velocidade vertical para gravidade (inicialmente 0 para o buggy)
         self.vel_x = 0  # Velocidade horizontal
         self.jump = False  # Flag para verificar se o personagem está no ar
 
+        # Se for o buggy, mantenha a velocidade vertical como 0
+        if self.name == 'Buggy':
+            self.vel_y = 0
+
     def apply_gravity(self, ground_level):
         gravity = 0.5  # A força da gravidade
-        self.vel_y += gravity  # Aumenta a velocidade vertical com a gravidade
-        self.rect.y += self.vel_y  # Atualiza a posição do personagem no eixo Y
-        
-        # Verifica se o personagem atingiu o solo
-        if self.rect.bottom >= ground_level:
-            self.rect.bottom = ground_level  # Mantém o personagem no solo
-            self.vel_y = 0  # Reseta a velocidade vertical ao atingir o solo
-            self.jump = False  # Permite que o personagem pule novamente
+
+        # Verifica se o personagem é o Player
+        if self.name == 'Player':
+            self.vel_y += gravity  # Aumenta a velocidade vertical com a gravidade
+            self.rect.y += self.vel_y  # Atualiza a posição do player no eixo Y
+            
+            # Verifica se o player atingiu o solo
+            if self.rect.bottom >= ground_level:
+                self.rect.bottom = ground_level  # Mantém o player no solo
+                self.vel_y = 0  # Reseta a velocidade vertical ao atingir o solo
+                self.jump = False  # Permite que o player pule novamente
+        else:  # Para o buggy
+            # O buggy não deve ter gravidade; mantenha-o fixo acima do solo
+            self.rect.bottom = ground_level - 30  # Mantém o buggy 30 pixels acima do solo
+            self.vel_y = 0  # Reseta a velocidade vertical
 
     def move(self, move_left, move_right):
         move_speed = 5  # Velocidade de movimento
