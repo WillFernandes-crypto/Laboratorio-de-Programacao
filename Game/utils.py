@@ -23,3 +23,6 @@ def draw_panel(screen, player, font):
     screen.blit(panel_img, (0, 0))  # Desenha o painel na tela
     # Mostra os status do jogador
     draw_text(f'{player.name} HP: {player.hp}', font, red, screen, 10, 10)  # Corrigido para incluir a posição correta
+    # for count, i in enumerate(buggy_list):
+        # mostrar nome saúde dos buggys
+        # draw_text(f'{i.name} HP: {i.hp}', font, red, screen)  # Corrigido para incluir a posição correta

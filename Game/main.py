@@ -1,8 +1,8 @@
 # main.py
 import pygame
 import sys
-from character import Character
-from utils import load_background, draw_bg, draw_text, draw_panel  # Adicionado draw_panel
+from character import Character, HealthBar  # Adiciona HealthBar
+from utils import load_background, draw_bg, draw_text, draw_panel, red, green
 
 # Inicializa o Pygame
 pygame.init()
@@ -46,83 +46,83 @@ def main_menu():
                     sys.exit()  # Fecha o jogo
 
 def game():
-    global screen  # Declara screen como global
+    global screen
     clock = pygame.time.Clock()
-    
-    # Define o nível do solo antes de instanciar os personagens
-    ground_level = screen_height - 50  # Define o nível do solo
-    player = Character(200, ground_level, 'Player', 30, 10, 3)  # Coloque o player no chão
-    buggy = Character(550, ground_level - 30, 'Buggy', 30, 10, 3)  # Ajusta para que o buggy fique um pouco acima do solo
 
-    mob_list = [buggy]
-    
-    score = 0  # Inicializa a pontuação do jogador
+    ground_level = screen_height - 50
+    player = Character(200, ground_level, 'Player', 100, 10, 3)
+    buggy = Character(550, ground_level - 30, 'Buggy', 30, 10, 3)
 
-    # Função para o ataque do jogador
+    buggy_list = [buggy]
+
+    # Barra de vida do player (vermelha) - Aumentada
+    player_health_bar = HealthBar(10, 30, player.max_hp, red, bar_length=200)
+
+    score = 0
+
     def player_attack():
         nonlocal score
-        for mob in mob_list:
-            if player.rect.colliderect(mob.rect):  # Se o jogador colidir com o mob
-                mob.hp -= 5  # Dano ao mob
-                if mob.hp <= 0:
-                    mob_list.remove(mob)  # Remove o mob quando ele é derrotado
-                    score += 10  # Aumenta a pontuação ao derrotar um mob
+        for buggy in buggy_list:
+            if player.rect.colliderect(buggy.rect):
+                buggy.hp -= 5
+                if buggy.hp <= 0:
+                    buggy_list.remove(buggy)
+                    score += 10
 
-    # Loop principal do jogo
     game_over = False
     while not game_over:
-        dt = clock.tick(100)
+        dt = clock.tick(60)
 
         # Desenha o background
         draw_bg(screen, scenery)
 
         # Checa as teclas pressionadas
         keys = pygame.key.get_pressed()
-        move_left = keys[pygame.K_a]  # Tecla 'A'
-        move_right = keys[pygame.K_d]  # Tecla 'D'
+        move_left = keys[pygame.K_a]
+        move_right = keys[pygame.K_d]
         
-        if keys[pygame.K_w]:  # Tecla 'W'
+        if keys[pygame.K_w]:
             player.jump_action()
 
-        # Verifica ataques (tecla J)
         if keys[pygame.K_j]:
             player_attack()
 
-        # Verifica cliques do mouse para ataque
         mouse_buttons = pygame.mouse.get_pressed()
-        if mouse_buttons[0]:  # Botão esquerdo do mouse
+        if mouse_buttons[0]:
             player_attack()
 
         player.update()
-
-        # Movimenta o player
         player.move(move_left, move_right)
-
-        # Aplica gravidade ao player e desenha
         player.apply_gravity(ground_level)
         player.draw(screen)
 
-        # Desenha os mobs
-        for mob in mob_list:
-            mob.apply_gravity(ground_level)  # Aplica gravidade apenas nos mobs normais
-            mob.update()
-            mob.draw(screen)
+        # Atualiza o HP do player para testar
+        #player.hp = 90
 
-        # Exibe a pontuação no canto superior direito
+        # Desenha o texto e a barra de vida do player
+        draw_text(f'{player.name} HP: {player.hp}', font, red, screen, 10, 5)
+        player_health_bar.draw(screen, player.hp)
+
+        # Desenha os buggys e suas barras de vida
+        for buggy in buggy_list:
+            buggy.apply_gravity(ground_level)
+            buggy.update()
+            buggy.draw(screen)
+
+            # Barra de vida do buggy menor
+            buggy_health_bar = HealthBar(buggy.rect.centerx - 25, buggy.rect.top - 15, buggy.max_hp, green, bar_length=50)
+            buggy_health_bar.draw(screen, buggy.hp)
+
+        # Exibe a pontuação
         draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
-
-        # **INSERÇÃO AQUI**
-        draw_panel(screen, player, font)  # Desenhe o painel com os status do player
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
             elif event.type == pygame.VIDEORESIZE:
-                # Atualiza a largura e altura da tela quando redimensionada
                 screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                ground_level = event.h - 50  # Atualiza o nível do solo
+                ground_level = event.h - 50
 
-        # Atualiza a tela
         pygame.display.update()
 
 # Inicia o jogo com o menu principal

@@ -1,6 +1,7 @@
 # character.py
 
 import pygame
+from utils import red, green
 
 class Character:
     def __init__(self, x, y, name, max_hp, mana, potions):
@@ -60,34 +61,45 @@ class Character:
                 self.jump = False  # Permite que o player pule novamente
         else:  # Para o buggy
             # O buggy não deve ter gravidade; mantenha-o fixo acima do solo
-            self.rect.bottom = ground_level - 30  # Mantém o buggy 30 pixels acima do solo
-            self.vel_y = 0  # Reseta a velocidade vertical
-
-    def move(self, move_left, move_right):
-        move_speed = 5  # Velocidade de movimento
-        if move_left:
-            self.rect.x -= move_speed
-        if move_right:
-            self.rect.x += move_speed
+            self.rect.bottom = ground_level - 30  # Mantém o buggy um pouco acima do solo
 
     def jump_action(self):
-        if not self.jump:  # Só permite pular se não estiver no ar
-            self.vel_y = -10  # Velocidade do pulo
-            self.jump = True
-    
+        if self.jump == False:  # Permite pular apenas se não estiver no ar
+            self.vel_y = -10  # Dano do pulo
+            self.jump = True  # Marca que o player está no ar
+
     def update(self):
-        animation_cooldown = 100
-        # Atualiza a imagem e lida com a animação
-        if pygame.time.get_ticks() - self.update_time > animation_cooldown:
-            self.update_time = pygame.time.get_ticks()
-            self.frame_index += 1
-            
-            # Reinicia o índice de animação ao final
-            if self.frame_index >= len(self.animation_list[self.action]):
-                self.frame_index = 0
-                
-        # Atualiza a imagem atual
         self.image = self.animation_list[self.action][self.frame_index]
 
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)  # Desenha a imagem na tela fornecida
+        # Atualiza o tempo da animação
+        if pygame.time.get_ticks() - self.update_time > 100:  # 100 ms por frame
+            self.frame_index += 1  # Avança para o próximo frame
+            self.update_time = pygame.time.get_ticks()  # Atualiza o tempo da animação
+
+        if self.frame_index >= len(self.animation_list[self.action]):  # Reseta a animação se chegar ao fim
+            self.frame_index = 0
+
+    def move(self, move_left, move_right):
+        if move_left and self.rect.x > 0:
+            self.rect.x -= 5
+        if move_right and self.rect.x < 800 - self.rect.width:
+            self.rect.x += 5
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class HealthBar:
+    def __init__(self, x, y, max_hp, color, bar_length=50):
+        self.x = x
+        self.y = y
+        self.max_hp = max_hp
+        self.bar_length = bar_length  # Permite personalizar o tamanho da barra
+        self.height = 5  # Altura da barra de vida
+        self.color = color  # Cor da barra de vida
+
+    def draw(self, surface, current_hp):
+        ratio = current_hp / self.max_hp  # Proporção de HP restante
+        pygame.draw.rect(surface, self.color, (self.x, self.y, self.bar_length * ratio, self.height))  # Desenha a barra de vida
+        # Adiciona bordas
+        pygame.draw.rect(surface, (255, 255, 255), (self.x, self.y, self.bar_length, self.height), 2)  # Borda branca
+
