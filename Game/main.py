@@ -1,9 +1,8 @@
-#main.py
-
+# main.py
 import pygame
 import sys
 from character import Character
-from utils import load_background, draw_bg, draw_text  # Removido set_screen
+from utils import load_background, draw_bg, draw_text, draw_panel  # Adicionado draw_panel
 
 # Inicializa o Pygame
 pygame.init()
@@ -19,8 +18,8 @@ pygame.display.set_caption('The Emptiness Machine')
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-# Carregar a fonte
-font = pygame.font.Font(None, 50)
+# Carregar a fonte após a inicialização do Pygame
+font = pygame.font.SysFont('Times New Roman', 26)
 
 # Carregar o background
 scenery = load_background()
@@ -112,6 +111,9 @@ def game():
         # Exibe a pontuação no canto superior direito
         draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
 
+        # **INSERÇÃO AQUI**
+        draw_panel(screen, player, font)  # Desenhe o painel com os status do player
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_over = True
@@ -128,4 +130,3 @@ main_menu()
 game()
 
 pygame.quit()
-

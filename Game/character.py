@@ -11,16 +11,29 @@ class Character:
         self.potions = potions
         self.alive = True
         self.animation_list = []
-        self.frame_index = 0
+        self.frame_index = 0 
+        self.action = 0 #0: idle, 1: attack, 2: dano, 3: morto
         self.update_time = pygame.time.get_ticks()
         
-        # Carrega as imagens da animação
+        # Carrega as imagens da animação idle
+        temp_list = []
         for i in range(6):
             img = pygame.image.load(f'./img/{self.name}/idle/{i}.png')
             img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
-            self.animation_list.append(img)
+            temp_list.append(img)
         
-        self.image = self.animation_list[self.frame_index]
+        self.animation_list.append(temp_list)
+
+        # Carrega as imagens da animação de ataque
+        temp_list = []
+        for i in range(7):
+            img = pygame.image.load(f'./img/{self.name}/attack/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
+            temp_list.append(img)
+        
+        self.animation_list.append(temp_list)
+
+        self.image = self.animation_list[self.action][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         # Velocidade vertical inicial
@@ -70,11 +83,11 @@ class Character:
             self.frame_index += 1
             
             # Reinicia o índice de animação ao final
-            if self.frame_index >= len(self.animation_list):
+            if self.frame_index >= len(self.animation_list[self.action]):
                 self.frame_index = 0
                 
         # Atualiza a imagem atual
-        self.image = self.animation_list[self.frame_index]
+        self.image = self.animation_list[self.action][self.frame_index]
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)  # Desenha a imagem na tela fornecida
