@@ -14,7 +14,7 @@ class Character:
         self.damage = damage
         self.animation_list = []
         self.frame_index = 0
-        self.action = 0  # 0: idle, 1: attack, 2: dano, 3: morto
+        self.action = 0  # 0: idle, 1: attack, 2: dano, 3: morto, 4: andar
         self.update_time = pygame.time.get_ticks()
 
         # Ajuste do caminho com base no tipo de personagem
@@ -55,6 +55,14 @@ class Character:
             temp_list.append(img)
         self.animation_list.append(temp_list)
 
+        # Carregar animações de movimento (walk)
+        temp_list = []
+        for i in range(11):  # Supondo que haja 6 frames na animação de walk
+            img = pygame.image.load(f'{base_path}/walk/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
+            temp_list.append(img)
+        self.animation_list.append(temp_list)  # Adicionando a animação de walk à lista (índice 4)
+
         self.facing_left = False  # Direção inicial do personagem
         self.damage_interval = 2000  # Intervalo de 2 segundos para causar dano
         self.damage_value = 10 if name == 'Buggy' else damage  # Dano inicial para o buggy é 10
@@ -70,7 +78,7 @@ class Character:
         if self.name == 'Buggy':
             self.hitbox = pygame.Rect(self.rect.centerx - 8, self.rect.centery - 35, 20, 40)  # Hitbox do buggy
         elif self.name == 'Player':
-            self.hitbox = pygame.Rect(self.rect.centerx - 45, self.rect.centery - 105, 30, 80)  # Hitbox do player
+            self.hitbox = pygame.Rect(self.rect.centerx - 45, self.rect.centery - 10, 40, 85)  # Hitbox do player
         else:
             self.hitbox = self.rect  # Outros personagens usam a hitbox normal
 
@@ -105,10 +113,15 @@ class Character:
     def move(self, move_left, move_right):
         if move_left and self.rect.x > 0:
             self.rect.x -= 5
-            self.facing_left = True  # Se mover para a esquerda, virado para a esquerda
-        if move_right and self.rect.x < 800 - self.rect.width:
+            self.facing_left = True
+            self.action = 4  # Ação de movimento (walk) para a esquerda
+        elif move_right and self.rect.x < 800 - self.rect.width:
             self.rect.x += 5
-            self.facing_left = False  # Se mover para a direita, virado para a direita
+            self.facing_left = False
+            self.action = 4  # Ação de movimento (walk) para a direita
+        else:
+            if self.action == 4:
+                self.idle()  # Se o jogador parar de se mover, volta para o idle
 
     def jump_action(self):
         if not self.jump:
@@ -123,13 +136,17 @@ class Character:
     def update(self):
         # Atualiza a posição da hitbox para seguir o personagem
         if self.name == 'Player':
-            self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2) - 25  # Desloca 10 pixels para a esquerda
-            self.hitbox.y = self.rect.centery - (self.hitbox.height // 2)
+            self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2) - 5
+            self.hitbox.y = self.rect.centery - (self.hitbox.height // 2) - 10
         else:
             self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2)
             self.hitbox.y = self.rect.centery - (self.hitbox.height // 2)
 
-        self.image = self.animation_list[self.action][self.frame_index]
+        # Espelhamento do sprite se estiver virado para a esquerda
+        if self.facing_left:
+            self.image = pygame.transform.flip(self.animation_list[self.action][self.frame_index], True, False)
+        else:
+            self.image = self.animation_list[self.action][self.frame_index]
         
         if pygame.time.get_ticks() - self.update_time > 100:
             self.frame_index += 1
@@ -143,7 +160,6 @@ class Character:
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-
 class HealthBar:
     def __init__(self, x, y, max_hp, color, bar_length=100, bar_height=10):
         self.x = x
