@@ -16,7 +16,7 @@ class Character:
         self.frame_index = 0
         self.action = 0  # 0: idle, 1: attack, 2: dano, 3: morto
         self.update_time = pygame.time.get_ticks()
-        
+
         # Ajuste do caminho com base no tipo de personagem
         if self.name == 'Player':
             base_path = './img/player'
@@ -50,11 +50,10 @@ class Character:
         # Carregar animações de morte
         temp_list = []
         for i in range(7): 
-            img = pygame.image.load(f'{base_path}/died/{i}.png')
+            img = pygame.image.load(f'{base_path}/dead/{i}.png')  # Corrigido para 'dead'
             img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
             temp_list.append(img)
         self.animation_list.append(temp_list)
-
 
         self.facing_left = False  # Direção inicial do personagem
         self.damage_interval = 2000  # Intervalo de 2 segundos para causar dano
@@ -71,11 +70,12 @@ class Character:
         if self.name == 'Buggy':
             self.hitbox = pygame.Rect(self.rect.centerx - 8, self.rect.centery - 35, 20, 40)  # Hitbox do buggy
         elif self.name == 'Player':
-            self.hitbox = pygame.Rect(self.rect.centerx - 45, self.rect.centery - 105, 30, 80)  # Hitbox do buggy
+            self.hitbox = pygame.Rect(self.rect.centerx - 45, self.rect.centery - 105, 30, 80)  # Hitbox do player
         else:
             self.hitbox = self.rect  # Outros personagens usam a hitbox normal
 
     def apply_gravity(self, ground_level):
+        
         gravity = 0.5
         if self.name == 'Player':
             self.vel_y += gravity
@@ -97,6 +97,11 @@ class Character:
         self.frame_index = 0
         self.update_time = pygame.time.get_ticks()
 
+    def die(self):
+        self.action = 3  # Muda a ação para morte
+        self.frame_index = 0  # Reinicia o índice do frame de morte
+        self.update_time = pygame.time.get_ticks()
+
     def move(self, move_left, move_right):
         if move_left and self.rect.x > 0:
             self.rect.x -= 5
@@ -111,9 +116,9 @@ class Character:
             self.jump = True
 
     def attack(self):
-            self.action = 1  # Muda a ação para ataque
-            self.frame_index = 0  # Reseta o índice do frame da animação de ataque
-            self.update_time = pygame.time.get_ticks()
+        self.action = 1  # Muda a ação para ataque
+        self.frame_index = 0  # Reseta o índice do frame da animação de ataque
+        self.update_time = pygame.time.get_ticks()
 
     def update(self):
         # Atualiza a posição da hitbox para seguir o personagem
@@ -152,5 +157,3 @@ class HealthBar:
         ratio = current_hp / self.max_hp
         pygame.draw.rect(surface, self.color, (self.x, self.y, self.bar_length * ratio, self.bar_height))
         pygame.draw.rect(surface, (255, 255, 255), (self.x, self.y, self.bar_length, self.bar_height), 2)
-
-
