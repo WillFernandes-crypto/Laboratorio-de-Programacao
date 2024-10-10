@@ -99,7 +99,7 @@ def game():
 
         else:
             # Se o jogador está morto, atualiza a animação de morte
-            player.rect.y = ground_level - player.rect.height - 40  # Ajuste a posição do player morto
+            player.rect.y = ground_level - player.rect.height  # Ajuste a posição do player morto
             player.update()
             player.draw(screen)  # Desenha o personagem na animação de morte
 
