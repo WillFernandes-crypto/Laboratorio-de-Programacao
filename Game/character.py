@@ -31,13 +31,30 @@ class Character:
             temp_list.append(img)
         self.animation_list.append(temp_list)
 
-        # Carregar animações de attack
+        # Carregar animações de ataque
         temp_list = []
         for i in range(7):
             img = pygame.image.load(f'{base_path}/attack/{i}.png')
             img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
             temp_list.append(img)
         self.animation_list.append(temp_list)
+
+        # Carregar animações de dano
+        temp_list = []
+        for i in range(4):
+            img = pygame.image.load(f'{base_path}/damage/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
+            temp_list.append(img)
+        self.animation_list.append(temp_list)
+
+        # Carregar animações de morte
+        temp_list = []
+        for i in range(7): 
+            img = pygame.image.load(f'{base_path}/died/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
+            temp_list.append(img)
+        self.animation_list.append(temp_list)
+
 
         self.facing_left = False  # Direção inicial do personagem
         self.damage_interval = 2000  # Intervalo de 2 segundos para causar dano
@@ -48,6 +65,7 @@ class Character:
         self.vel_y = 0
         self.vel_x = 0
         self.jump = False
+        self.is_dead = False
 
         # Criar hitbox menor e centralizada
         if self.name == 'Buggy':
@@ -74,6 +92,11 @@ class Character:
         self.frame_index = 0
         self.update_time = pygame.time.get_ticks()
 
+    def damage(self):
+        self.action = 2
+        self.frame_index = 0
+        self.update_time = pygame.time.get_ticks()
+
     def move(self, move_left, move_right):
         if move_left and self.rect.x > 0:
             self.rect.x -= 5
@@ -82,20 +105,15 @@ class Character:
             self.rect.x += 5
             self.facing_left = False  # Se mover para a direita, virado para a direita
 
-
     def jump_action(self):
         if not self.jump:
             self.vel_y = -10
             self.jump = True
 
-    def die(self):
-        self.action = 3  # 3 representa a ação de "morto"
-        self.frame_index = 0
-        self.animation_list[3] = []
-        for i in range(4):  # Supondo que haja 4 frames na animação de morte
-            img = pygame.image.load(f'./img/player/died/{i}.png')
-            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
-            self.animation_list[3].append(img)
+    def attack(self):
+            self.action = 1  # Muda a ação para ataque
+            self.frame_index = 0  # Reseta o índice do frame da animação de ataque
+            self.update_time = pygame.time.get_ticks()
 
     def update(self):
         # Atualiza a posição da hitbox para seguir o personagem
@@ -105,34 +123,34 @@ class Character:
         else:
             self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2)
             self.hitbox.y = self.rect.centery - (self.hitbox.height // 2)
-        
+
         self.image = self.animation_list[self.action][self.frame_index]
+        
         if pygame.time.get_ticks() - self.update_time > 100:
             self.frame_index += 1
             self.update_time = pygame.time.get_ticks()
+
         if self.frame_index >= len(self.animation_list[self.action]):
-            if self.action == 3:  # Se estiver morto, não faz mais nada
+            if self.action == 3:  # Se a ação for morte
                 self.frame_index = len(self.animation_list[self.action]) - 1  # Mantém o último frame de morte
             else:
                 self.idle()
 
-
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        surface.blit(self.image, self.rect)
-        # Desenho opcional para depuração:
-        pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 2)  # Desenhar a hitbox para visualização
 
 class HealthBar:
-    def __init__(self, x, y, max_hp, color, bar_length=50):
+    def __init__(self, x, y, max_hp, color, bar_length=100, bar_height=10):
         self.x = x
         self.y = y
         self.max_hp = max_hp
         self.bar_length = bar_length
-        self.height = 5
+        self.bar_height = bar_height
         self.color = color
 
     def draw(self, surface, current_hp):
         ratio = current_hp / self.max_hp
-        pygame.draw.rect(surface, self.color, (self.x, self.y, self.bar_length * ratio, self.height))
-        pygame.draw.rect(surface, (255, 255, 255), (self.x, self.y, self.bar_length, self.height), 2)
+        pygame.draw.rect(surface, self.color, (self.x, self.y, self.bar_length * ratio, self.bar_height))
+        pygame.draw.rect(surface, (255, 255, 255), (self.x, self.y, self.bar_length, self.bar_height), 2)
+
+

@@ -38,6 +38,9 @@ def main_menu():
                     sys.exit()
 
 def game():
+    attack_range = 70  # Aumentando a distância de ataque do jogador
+    dead_mobs = []  # Lista para armazenar mobs mortos e suas animações
+
     global screen, screen_width, screen_height
     clock = pygame.time.Clock()
 
@@ -50,27 +53,19 @@ def game():
     player_health_bar = HealthBar(10, 30, player.max_hp, red, bar_length=200)
     score = 0
 
-    def player_attack():
-        nonlocal score
-        attack_range = pygame.Rect(player.hitbox.left - 50 if player.facing_left else player.hitbox.right, 
-                                player.hitbox.top, 100, player.hitbox.height)
-        for mob in mob_list:
-            if attack_range.colliderect(mob.hitbox):
-                mob.hp = max(mob.hp - player.damage, 0)  # Evitar HP abaixo de 0
-                if mob.hp == 0:
-                    mob_list.remove(mob)
-                    score += 10
-
-
     def check_game_over():
         if player.hp <= 0:
             player.die()
 
     game_over = False
     mob_damage_timer = 0  # Controle de dano por segundo dos mobs
+    attack_timer = 0  # Timer para ataques do player
+    attack_interval = 1000  # Intervalo de ataque em milissegundos (1 segundo)
+
     while not game_over:
         dt = clock.tick(60)
         mob_damage_timer += dt
+        attack_timer += dt  # Atualiza o timer de ataque
 
         draw_bg(screen, scenery)
 
@@ -81,12 +76,14 @@ def game():
         if keys[pygame.K_w]:
             player.jump_action()
 
-        if keys[pygame.K_j]:
-            player_attack()
+        if keys[pygame.K_j] and attack_timer >= attack_interval:  # Verifica se o ataque está disponível
+            player.attack()  # Chama o método de ataque
+            attack_timer = 0  # Reseta o timer de ataque
 
         mouse_buttons = pygame.mouse.get_pressed()
-        if mouse_buttons[0]:
-            player_attack()
+        if mouse_buttons[0] and attack_timer >= attack_interval:  # Verifica se o ataque está disponível
+            player.attack()  # Chama o método de ataque
+            attack_timer = 0  # Reseta o timer de ataque
 
         player.update()
         player.move(move_left, move_right)
@@ -102,13 +99,42 @@ def game():
             mob.draw(screen)
 
             mob_health_bar = HealthBar(mob.rect.centerx - 25, mob.rect.top - 15, mob.max_hp, green, bar_length=50)
-            mob_health_bar.draw(screen, mob.hp)
 
-            # Controla o tempo para o mob causar dano ao player
-            if mob.name == 'Buggy' and player.hitbox.colliderect(mob.hitbox) and mob_damage_timer >= mob.damage_interval:
-                player.hp = max(player.hp - mob.damage_value, 0)  # Dano de 10
+            # Desenhar a barra de HP apenas se o mob não estiver morto
+            if not mob.is_dead:
+                mob_health_bar.draw(screen, mob.hp)
+            # Não desenha nada se o mob estiver morto
+            else:
+                continue  # Apenas passa para a próxima iteração do loop
+
+            # Controle de dano ao player, mas somente se o mob estiver vivo
+            if mob.name == 'Buggy' and player.hitbox.colliderect(mob.hitbox) and mob_damage_timer >= mob.damage_interval and mob.hp > 0:
+                player.hp = max(player.hp - mob.damage_value, 0)  # Aplica dano ao player
                 mob_damage_timer = 0  # Reseta o timer de dano
 
+            # Verifica se o ataque do player atinge o mob pelo alcance
+            if player.action == 1 and abs(player.hitbox.centerx - mob.hitbox.centerx) <= attack_range:
+                mob.hp = max(mob.hp - player.damage, 0)  # Aplica dano ao mob
+
+            # Verifica se o mob foi derrotado
+            if mob.hp <= 0 and not mob.is_dead:
+                mob.action = 3  # Muda a ação para morte
+                mob.is_dead = True  # Marca o mob como morto
+                score += 10  # Adiciona 10 pontos ao score ao derrotar um mob
+                mob.frame_index = 0  # Reinicia a animação de morte
+                mob.update_time = pygame.time.get_ticks()  # Atualiza o tempo de morte
+
+            # Atualiza a animação dos mobs mortos
+            for dead_mob in dead_mobs[:]:  # Usar uma cópia da lista para evitar erros ao removê-los
+                dead_mob.draw(screen)  # Desenha o mob morto
+
+                # Remove o mob após 1 segundo
+                if pygame.time.get_ticks() - dead_mob.update_time > 1000:  # Verifica se passou 1 segundo
+                    dead_mobs.remove(dead_mob)  # Remove o mob da lista de mortos
+
+                
+        # Desenhar hitbox do player
+        pygame.draw.rect(screen, red, player.hitbox, 2)  # Hitbox do player
 
         draw_text(f'Score: {score}', font, WHITE, screen, screen_width - 200, 20)
 
