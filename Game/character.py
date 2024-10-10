@@ -14,8 +14,9 @@ class Character:
         self.damage = damage
         self.animation_list = []
         self.frame_index = 0
-        self.action = 0  # 0: idle, 1: attack, 2: dano, 3: morto, 4: andar
+        self.action = 0  # 0: idle, 1: attack, 2: dano, 3: morto, 4: andar, 5: pular
         self.update_time = pygame.time.get_ticks()
+        self.is_attacking = False  # Atributo para controlar se está atacando
 
         # Ajuste do caminho com base no tipo de personagem
         if self.name == 'Player':
@@ -62,6 +63,14 @@ class Character:
             img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
             temp_list.append(img)
         self.animation_list.append(temp_list)  # Adicionando a animação de walk à lista (índice 4)
+
+        # Carregar animações de pulo
+        temp_list = []
+        for i in range(14):  # Supondo que existam 14 frames de pulo (0.png até 13.png)
+            img = pygame.image.load(f'{base_path}/jump/{i}.png')
+            img = pygame.transform.scale(img, (img.get_width() * 1.5, img.get_height() * 1.5))
+            temp_list.append(img)
+        self.animation_list.append(temp_list)  # Adiciona animação de pulo à lista (índice 5)
 
         self.facing_left = False  # Direção inicial do personagem
         self.damage_interval = 2000  # Intervalo de 2 segundos para causar dano
@@ -114,11 +123,13 @@ class Character:
         if move_left and self.rect.x > 0:
             self.rect.x -= 5
             self.facing_left = True
-            self.action = 4  # Ação de movimento (walk) para a esquerda
+            if not self.jump:  # Altera para andar apenas se não estiver pulando
+                self.action = 4  # Ação de movimento (walk) para a esquerda
         elif move_right and self.rect.x < 800 - self.rect.width:
             self.rect.x += 5
             self.facing_left = False
-            self.action = 4  # Ação de movimento (walk) para a direita
+            if not self.jump:  # Altera para andar apenas se não estiver pulando
+                self.action = 4  # Ação de movimento (walk) para a direita
         else:
             if self.action == 4:
                 self.idle()  # Se o jogador parar de se mover, volta para o idle
@@ -127,6 +138,10 @@ class Character:
         if not self.jump:
             self.vel_y = -10
             self.jump = True
+            self.action = 5  # Altera a ação para pular
+            self.frame_index = 0  # Reinicia o índice do frame de pulo
+            self.update_time = pygame.time.get_ticks()  # Atualiza o tempo para animação
+
 
     def attack(self):
         self.action = 1  # Muda a ação para ataque
@@ -141,6 +156,16 @@ class Character:
         else:
             self.hitbox.x = self.rect.centerx - (self.hitbox.width // 2)
             self.hitbox.y = self.rect.centery - (self.hitbox.height // 2)
+ 
+        # Verifica se a ação atual é pulo e atualiza o frame
+        if self.action == 5:  # Pulo
+            if pygame.time.get_ticks() - self.update_time > 100:  # Tempo de troca de frame
+                self.frame_index += 1
+                self.update_time = pygame.time.get_ticks()
+
+            if self.frame_index >= len(self.animation_list[self.action]):
+                self.frame_index = 0  # Reseta para o início da animação de pulo
+                # Não altera para idle, pois o personagem ainda está no ar
 
         # Espelhamento do sprite se estiver virado para a esquerda
         if self.facing_left:
