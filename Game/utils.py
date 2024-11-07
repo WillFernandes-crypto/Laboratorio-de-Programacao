@@ -14,7 +14,7 @@ def draw_bg(screen, scenery):
     screen.blit(scaled_scenery, (0, 0))
 
 def load_background():
-    return pygame.image.load(f'./img/scenery.png').convert_alpha()
+    return pygame.image.load('img/backgrounds/bg1/scenery.png').convert_alpha()
 
 def draw_panel(screen, player, font):
     # Desenha um painel retangular
