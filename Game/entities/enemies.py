@@ -16,6 +16,14 @@ class Tooth(pygame.sprite.Sprite):
 		self.speed = 200
 
 		self.hit_timer = Timer(250)
+		self.health = 3
+
+	def take_damage(self):
+		if not self.hit_timer.active:
+			self.health -= 1
+			self.hit_timer.activate()
+			if self.health <= 0:
+				self.kill()
 
 	def reverse(self):
 		if not self.hit_timer.active:

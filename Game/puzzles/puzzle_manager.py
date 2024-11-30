@@ -3,6 +3,7 @@ from .theory_puzzle import TheoryPuzzle
 from .graphs_puzzle import GraphsPuzzle
 from .aed_puzzle import create_random_aed_puzzle
 import random
+import pygame
 
 class PuzzleManager:
     def __init__(self):
@@ -14,14 +15,17 @@ class PuzzleManager:
         }
         self.current_puzzle = None
         self.current_type = None
+        self.text_y_position = 50
+        self.is_active = False
+        
+        self.display_surface = pygame.display.get_surface()
+        self.user_input = ""
+        self.font = pygame.font.Font(None, 36)
     
     def create_puzzle(self, puzzle_type=None):
-        """
-        Cria um novo puzzle do tipo especificado ou aleatório
-        
-        Args:
-            puzzle_type (str, optional): 'automata', 'theory', 'graphs' ou 'aed'
-        """
+        if self.is_active:
+            return None
+            
         if puzzle_type is None:
             puzzle_type = random.choice(list(self.puzzle_types.keys()))
             
@@ -30,7 +34,13 @@ class PuzzleManager:
             
         self.current_type = puzzle_type
         self.current_puzzle = self.puzzle_types[puzzle_type]()
+        self.is_active = True
         return self.current_puzzle
+        
+    def close_current_puzzle(self):
+        self.current_puzzle = None
+        self.current_type = None
+        self.is_active = False
     
     def get_current_puzzle(self):
         """Retorna o puzzle atual"""

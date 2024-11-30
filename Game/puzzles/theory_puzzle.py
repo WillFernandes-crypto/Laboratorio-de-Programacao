@@ -1,5 +1,6 @@
 import random
 from typing import List, Tuple, Dict
+from utils.text_formatter import format_puzzle_text
 
 class TheoryPuzzle:
     def __init__(self):
@@ -16,35 +17,36 @@ class TheoryPuzzle:
     
     def turing_machine_puzzle(self) -> Tuple[str, List[str], int]:
         """Puzzle sobre Máquina de Turing"""
-        question = """
-        Considere uma Máquina de Turing M que aceita a linguagem L = {w#w | w ∈ {0,1}*}.
-        Qual das seguintes afirmações é verdadeira sobre esta máquina?
-        """
+        question = format_puzzle_text(
+            "Considere uma Máquina de Turing M que aceita a linguagem L = {w#w | w ∈ {0,1}*}. Qual das seguintes afirmações é verdadeira sobre esta máquina?",
+            max_chars_per_line=35
+        )
         
         options = [
-            "A máquina precisa apenas de uma fita para reconhecer esta linguagem",
-            "A máquina precisa necessariamente de duas fitas para reconhecer esta linguagem",
-            "A máquina precisa de memória infinita para reconhecer qualquer entrada",
-            "Esta linguagem não pode ser reconhecida por uma Máquina de Turing"
+            format_puzzle_text("A máquina precisa apenas de uma fita para reconhecer esta linguagem", max_chars_per_line=35),
+            format_puzzle_text("A máquina precisa necessariamente de duas fitas para reconhecer esta linguagem", max_chars_per_line=35),
+            format_puzzle_text("A máquina precisa de memória infinita para reconhecer qualquer entrada", max_chars_per_line=35),
+            format_puzzle_text("Esta linguagem não pode ser reconhecida por uma Máquina de Turing", max_chars_per_line=35)
         ]
         
-        correct_answer = 0  # índice da resposta correta (0-based)
+        correct_answer = 0
         return question, options, correct_answer
     
     def complexity_puzzle(self) -> Tuple[str, List[str], int]:
         """Puzzle sobre Complexidade Computacional"""
-        question = """
-        Dado um problema P que é NP-Completo, qual das seguintes afirmações é verdadeira?
-        """
+        question = format_puzzle_text(
+            "Dado um problema P que é NP-Completo, qual das seguintes afirmações é verdadeira?",
+            max_chars_per_line=35
+        )
         
         options = [
-            "Se P ≠ NP, então P não pode ser resolvido em tempo polinomial",
-            "P pode ser reduzido ao problema do caminho hamiltoniano em tempo polinomial",
-            "Se encontrarmos um algoritmo polinomial para P, então P = NP",
-            "P não pode ser resolvido por nenhum algoritmo"
+            format_puzzle_text("Se P ≠ NP, então P não pode ser resolvido em tempo polinomial", max_chars_per_line=35),
+            format_puzzle_text("P pode ser reduzido ao problema do caminho hamiltoniano em tempo polinomial", max_chars_per_line=35),
+            format_puzzle_text("Se encontrarmos um algoritmo polinomial para P, então P = NP", max_chars_per_line=35),
+            format_puzzle_text("P não pode ser resolvido por nenhum algoritmo", max_chars_per_line=35)
         ]
         
-        correct_answer = 2  # índice da resposta correta (0-based)
+        correct_answer = 2
         return question, options, correct_answer
     
     def computability_puzzle(self) -> Tuple[str, List[str], int]:
@@ -54,10 +56,10 @@ class TheoryPuzzle:
         """
         
         options = [
-            "É possível criar um programa que determine se qualquer outro programa irá parar",
-            "O problema é decidível para programas que usam apenas loops 'for'",
-            "O problema é indecidível, mas semi-decidível",
-            "O problema é decidível para programas que não usam recursão"
+            format_puzzle_text("É possível criar um programa que determine se qualquer outro programa irá parar", max_chars_per_line=35),
+            format_puzzle_text("O problema é decidível para programas que usam apenas loops 'for'", max_chars_per_line=35),
+            format_puzzle_text("O problema é indecidível, mas semi-decidível", max_chars_per_line=35),
+            format_puzzle_text("O problema é decidível para programas que não usam recursão", max_chars_per_line=35)
         ]
         
         correct_answer = 2  # índice da resposta correta (0-based)

@@ -3,6 +3,7 @@ from utils.settings import *
 from utils.sprites import *
 import math
 from random import choice
+from utils.text_formatter import format_puzzle_text
 
 class State(pygame.sprite.Sprite):
     def __init__(self, pos, groups, is_initial=False, is_final=False):
@@ -387,3 +388,21 @@ class AutomataPuzzle:
             
         except AttributeError:
             return False
+    
+    def get_puzzle_text(self):
+        """Retorna o texto do puzzle baseado no tipo selecionado"""
+        puzzle_texts = {
+            'ab': format_puzzle_text(
+                "Construa um autômato finito que aceite a linguagem L = {ab}",
+                max_chars_per_line=35
+            ),
+            'aab': format_puzzle_text(
+                "Construa um autômato finito que aceite a linguagem L = {aab}",
+                max_chars_per_line=35
+            ),
+            'aba': format_puzzle_text(
+                "Construa um autômato finito que aceite a linguagem L = {aba}",
+                max_chars_per_line=35
+            )
+        }
+        return puzzle_texts[self.puzzle_type]

@@ -9,6 +9,7 @@ from core.data import Data
 from pytmx.util_pygame import load_pygame
 from os.path import join
 import sys  # Para permitir encerramento correto do jogo
+from ui.game_over import GameOver
 
 class Game:
     def __init__(self):
@@ -31,11 +32,19 @@ class Game:
         self.current_stage.setup_stage_func(self.switch_stage)
         self.current_stage.setup_game(self)
 
+        # Inicializa a música do jogo
+        self.game_music = pygame.mixer.Sound(join('assets', 'audio', 'gaming', 'heavy_crown.mp3'))
+        self.game_music.set_volume(0.5)
+        self.game_music.play(loops=-1)  # Começa tocando em loop
+        
         self.paused = False
 
     def import_assets(self):
         self.level_frames = {
             'flag': import_folder('assets', 'graphics', 'level', 'flag'),
+            'door': import_folder('assets', 'graphics', 'level', 'door'),
+            'dragon_statue': import_folder('assets', 'graphics', 'level', 'dragon_statue'),
+            'computer': import_folder('assets', 'graphics', 'level', 'computer'),
             'saw': import_folder('assets', 'graphics', 'enemies', 'saw', 'animation'),
             'floor_spike': import_folder('assets', 'graphics','enemies', 'floor_spikes'),
 			'palms': import_sub_folders('assets', 'graphics', 'level', 'palms'),
@@ -44,7 +53,7 @@ class Game:
 			'big_chain': import_folder('assets', 'graphics','level', 'big_chains'),
 			'small_chain': import_folder('assets', 'graphics','level', 'small_chains'),
 			'candle_light': import_folder('assets', 'graphics','level', 'candle light'),
-			'player': import_sub_folders('assets', 'images','player'),
+			'player': import_sub_folders('assets', 'graphics','player'),
 			'saw': import_folder('assets', 'graphics', 'enemies', 'saw', 'animation'),
 			'saw_chain': import_image('assets',  'graphics', 'enemies', 'saw', 'saw_chain'),
 			'helicopter': import_folder('assets', 'graphics', 'level', 'helicopter'),
@@ -82,16 +91,32 @@ class Game:
 			'damage': pygame.mixer.Sound(join('assets', 'audio', 'damage.wav')),
 			'pearl': pygame.mixer.Sound(join('assets', 'audio', 'pearl.wav')),
 		}
-        self.bg_music = pygame.mixer.Sound(join('assets', 'audio', 'starlight_city.mp3'))
+        self.bg_music = pygame.mixer.Sound(join('assets', 'audio', 'menu', 'emptiness_machine.mp3'))
         self.bg_music.set_volume(0.5)
 
     def check_game_over(self):
         if self.data.health <= 0:
-            pygame.quit()
-            sys.exit()
+            # Para a música do jogo
+            if hasattr(self, 'game_music'):
+                self.game_music.stop()
+                
+            # Cria e executa a tela de game over
+            game_over = GameOver()
+            if game_over.run():  # Se o jogador escolher "Retry"
+                # Reinicia o jogo
+                self.data.health = 3  # Reseta a vida do jogador
+                self.current_stage = Level(self.tmx_maps[0], self.level_frames, self.data)
+                self.current_stage.setup_stage_func(self.switch_stage)
+                self.current_stage.setup_game(self)
+                
+                # Reinicia a música
+                if hasattr(self, 'game_music'):
+                    self.game_music.play(loops=-1)
+            else:  # Se o jogador escolher "Exit"
+                pygame.quit()
+                sys.exit()
 
     def run(self):
-        """Loop principal do jogo."""
         while True:
             delta_time = self.clock.tick(60) / 1000
             for event in pygame.event.get():
@@ -99,23 +124,23 @@ class Game:
                     pygame.quit()
                     sys.exit()
                     
-                # Passa os eventos para o puzzle quando estiver ativo
                 if hasattr(self.current_stage, 'puzzle_active') and self.current_stage.puzzle_active:
                     self.current_stage.handle_puzzle_events(event)
 
-            # Atualiza e renderiza o nível atual
             self.check_game_over()
             
-            # Renderiza o jogo base primeiro
-            if not self.paused:
-                self.current_stage.run(delta_time)
-            else:
-                # Quando pausado, ainda mostra o último frame do jogo
-                self.current_stage.draw_only()
-            
-            # Renderiza o puzzle por cima se estiver ativo
+            # Controle mais rigoroso do estado do jogo
             if hasattr(self.current_stage, 'puzzle_active') and self.current_stage.puzzle_active:
+                if not self.paused:
+                    self.paused = True
+                    self.game_music.stop()
+                self.current_stage.draw_only()  # Mantém o último frame do jogo
                 self.current_stage.run_puzzle(delta_time)
+            else:
+                if self.paused:
+                    self.paused = False
+                    self.game_music.play(loops=-1)
+                self.current_stage.run(delta_time)
             
             self.ui.update(delta_time)
             self.ui.draw()

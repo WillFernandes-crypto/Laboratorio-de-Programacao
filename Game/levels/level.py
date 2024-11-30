@@ -4,6 +4,7 @@ from entities.player import *
 from entities.enemies import *
 from core.groups import *
 from puzzles.automata_puzzle import *
+from puzzles.puzzle_manager import *
 from random import uniform
 
 class Level:
@@ -75,25 +76,30 @@ class Level:
                     frames = level_frames['player'],
                     data = self.data)
             else:
-                if obj.name in ('barrel', 'crate'):
-                    Sprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
-                else:
-                    # frames 
-                    frames = level_frames[obj.name] if not 'palm' in obj.name else level_frames['palms'][obj.name]
-                    if obj.name == 'floor_spike' and obj.properties['inverted']:
-                        frames = [pygame.transform.flip(frame, False, True) for frame in frames]
-
-                    # groups 
+                if obj.name == 'door':
+                    frames = level_frames[obj.name]
                     groups = [self.all_sprites]
-                    if obj.name in('palm_small', 'palm_large'): groups.append(self.semi_collision_sprites)
-                    # if obj.name in ('saw', 'floor_spike'): groups.append(self.damage_sprites)
+                    z = Z_LAYERS['bg details']  # Define a porta para estar atrás do player
+                    AnimatedSprite((obj.x, obj.y), frames, groups, z, ANIMATION_SPEED)
+                else:
+                    if obj.name in ('barrel', 'crate'):
+                        Sprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+                    else:
+                        # frames 
+                        frames = level_frames[obj.name] if not 'palm' in obj.name else level_frames['palms'][obj.name]
+                        if obj.name == 'floor_spike' and obj.properties['inverted']:
+                            frames = [pygame.transform.flip(frame, False, True) for frame in frames]
 
-                    # z index
-                    z = Z_LAYERS['main'] if not 'bg' in obj.name else Z_LAYERS['bg details']
+                        # groups 
+                        groups = [self.all_sprites]
+                        if obj.name in('palm_small', 'palm_large'): groups.append(self.semi_collision_sprites)
 
-                    # animation speed
-                    animation_speed = ANIMATION_SPEED if not 'palm' in obj.name else ANIMATION_SPEED + uniform(-1,1)
-                    AnimatedSprite((obj.x, obj.y), frames, groups, z, animation_speed)
+                        # z index
+                        z = Z_LAYERS['main'] if not 'bg' in obj.name else Z_LAYERS['bg details']
+
+                        # animation speed
+                        animation_speed = ANIMATION_SPEED if not 'palm' in obj.name else ANIMATION_SPEED + uniform(-1,1)
+                        AnimatedSprite((obj.x, obj.y), frames, groups, z, animation_speed)
             if obj.name == 'flag':
                 self.level_finish_rect = pygame.FRect((obj.x, obj.y), (obj.width, obj.height))    
 
@@ -211,11 +217,13 @@ class Level:
                 item_sprites[0].kill()
 
     def attack_collision(self):
-        for target in self.pearl_sprites.sprites() + self.tooth_sprites.sprites():
-            facing_target = self.player.rect.centerx < target.rect.centerx and self.player.facing_right or \
-                            self.player.rect.centerx > target.rect.centerx and not self.player.facing_right
+        # Filtra apenas os inimigos Tooth da lista de alvos
+        for target in [sprite for sprite in self.tooth_sprites.sprites() if isinstance(sprite, Tooth)]:
+            facing_target = (self.player.rect.centerx < target.rect.centerx and self.player.facing_right) or \
+                           (self.player.rect.centerx > target.rect.centerx and not self.player.facing_right)
+            
             if target.rect.colliderect(self.player.rect) and self.player.attacking and facing_target:
-                target.reverse()
+                target.take_damage()  # Aplica dano ao inimigo
 
     def check_constraint(self):
         # esqueda direita
@@ -279,7 +287,7 @@ class Level:
                 # Se o puzzle foi completado, marca como concluído e avança para o próximo nível
                 if self.automata_puzzle.completed:
                     self.puzzle_completed = True  # Marca o puzzle como concluído
-                    self.switch_stage('overworld', self.level_unlock)
+                    self.switch_stage('0', self.level_unlock)
     
     def run(self, delta_time):
         """Método principal de execução do nível"""
